@@ -9,6 +9,7 @@ public class Contato
     private string email;
     private string telefone;
 
+    public Contato() { }
     public Contato(ContatoDTO contato)
     {
         this.nome = contato.nome;

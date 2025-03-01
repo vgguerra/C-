@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json;
 using lista.DTOs;
 using lista.Models;
 
@@ -43,6 +44,73 @@ class Program
             j++;
         }
     }
+
+    static void salvarContato(Agenda agenda)
+    {
+        try
+        {
+            string json = JsonSerializer.Serialize(agenda.listarContatos(),
+                new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText("C:\\Users\\User\\Estudos\\contatos.json", json);
+            Console.WriteLine("Salvo em JSON");
+        }
+        catch (IOException ioException)
+        {
+            Console.WriteLine($"❌ Erro ao salvar o arquivo: {ioException.Message}");
+        }
+        catch (Exception ex) // Captura qualquer outro erro
+        {
+            Console.WriteLine($"❌ Erro inesperado ao salvar contatos: {ex.Message}");
+        }
+    }
+    
+    static List<Contato> CarregarContatos()
+    {
+        try
+        {
+            if (!File.Exists("C:\\Users\\User\\Estudos\\contatos.json"))
+            {
+                Console.WriteLine("⚠️ Arquivo JSON não encontrado. Criando um novo...");
+                return new List<Contato>();
+            }
+
+            string json = File.ReadAllText("C:\\Users\\User\\Estudos\\contatos.json");
+            return JsonSerializer.Deserialize<List<Contato>>(json) ?? new List<Contato>();
+        }
+        catch (JsonException jsonEx) // Erros ao interpretar o JSON
+        {
+            Console.WriteLine($"❌ Erro ao ler o JSON: {jsonEx.Message}");
+            return new List<Contato>();
+        }
+        catch (IOException ioEx) // Erros de leitura/escrita do arquivo
+        {
+            Console.WriteLine($"❌ Erro ao acessar o arquivo: {ioEx.Message}");
+            return new List<Contato>();
+        }
+        catch (Exception ex) // Captura qualquer outro erro
+        {
+            Console.WriteLine($"❌ Erro inesperado ao carregar contatos: {ex.Message}");
+            return new List<Contato>();
+        }
+    }
+    
+    public void imprimirAlfabetica()
+    {
+        var grupos = agenda.listarContatos()
+            .GroupBy(c => c.Nome[0]).OrderBy(g => g.Key);
+
+        foreach (var item in grupos)
+        {
+            Console.WriteLine($"Contatos com '{item.Key}':");
+            
+            foreach (var contato in item)
+            {
+                Console.WriteLine($"  - {contato.Nome} ({contato.Telefone})");
+            }
+        }
+        
+        
+    }
     
     
     public static void Main(string[] args)
@@ -63,7 +131,7 @@ class Program
         
         while (i != 0)
         {
-            Console.WriteLine("Selecione a opção desejada:\n1- Adiconar um contato a lista\n2- Remover um contato\n3- Editar um contato\n4- Listar todos os contatos\n0- Sair");
+            Console.WriteLine("Selecione a opção desejada:\n1- Adiconar um contato a lista\n2- Remover um contato\n3- Editar um contato\n4- Listar todos os contatos\n5- Imprimir em ordem alfabética\n6- Salvar arquivo em JSON\n7- Carregar um arquivo Json\n0- Sair");
             i = Convert.ToInt32(Console.ReadLine());
 
             switch (i)
@@ -102,6 +170,22 @@ class Program
                     break;
                 case 4:
                     p.imprimirContatos();
+                    break;
+                case 5:
+                    p.imprimirAlfabetica();
+                    break;
+                case 6:
+                    salvarContato(p.agenda);
+                    break;
+                case 7:
+                    List<Contato> contatosCarregados = CarregarContatos();
+
+                    // 🔹 Exibir os contatos carregados
+                    Console.WriteLine("📌 Contatos carregados do JSON:");
+                    foreach (var contato in contatosCarregados)
+                    {
+                        Console.WriteLine($"- {contato.Nome}: {contato.Telefone}");
+                    }
                     break;
             }
             
